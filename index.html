@@ -1,0 +1,2584 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MetaHuman Production Pipeline — Studio Grade</title>
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --bg2: #111114;
+      --bg3: #18181d;
+      --bg4: #1e1e24;
+      --border: #2a2a35;
+      --border2: #3a3a48;
+      --text: #e8e8f0;
+      --text2: #9090a8;
+      --text3: #5a5a70;
+      --accent: #6b9fff;
+      --accent2: #4a7de8;
+      --green: #4ecb8d;
+      --amber: #f0a835;
+      --red: #e85555;
+      --purple: #a878f0;
+      --teal: #38c9c9;
+      --coral: #e87055;
+      --sans: 'Segoe UI', sans-serif;
+      --serif: 'Segoe UI', serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR NAV */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 240px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-logo h1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .nav-section {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-section-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: var(--text3);
+      text-transform: uppercase;
+      padding: 0 20px 6px;
+      display: block;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 20px;
+      color: var(--text2);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+      text-decoration: none;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      color: var(--text);
+      background: var(--bg3);
+      border-left-color: var(--accent);
+    }
+
+    .nav-item .phase-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 240px;
+      min-height: 100vh;
+    }
+
+    /* HERO */
+    .hero {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 56px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at 80% 50%, rgba(107, 159, 255, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-meta {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--text2);
+      margin-bottom: 28px;
+      max-width: 640px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-stat .val {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .hero-stat .lbl {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    /* CONTENT AREA */
+    .content {
+      padding: 0;
+    }
+
+    /* PHASE HEADER */
+    .phase-header {
+      padding: 32px 56px 0;
+      margin-top: 40px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .phase-number {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .phase-title-block h2 {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .phase-title-block p {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    /* SECTION WRAPPER */
+    .section {
+      padding: 24px 56px 0;
+    }
+
+    /* SUBSECTION */
+    .subsection {
+      margin-bottom: 32px;
+    }
+
+    .subsection-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .subsection-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg4);
+    }
+
+    .code-filename {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .code-lang {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      background: var(--bg2);
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    .code-body {
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      color: #c8d0e8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Syntax */
+    .kw {
+      color: #a878f0;
+    }
+
+    .fn {
+      color: #6b9fff;
+    }
+
+    .st {
+      color: #4ecb8d;
+    }
+
+    .cm {
+      color: #4a5070;
+      font-style: italic;
+    }
+
+    .num {
+      color: #f0a835;
+    }
+
+    .cl {
+      color: #38c9c9;
+    }
+
+    /* CALLOUT */
+    .callout {
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      border: 1px solid;
+    }
+
+    .callout-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .callout-body {
+      flex: 1;
+    }
+
+    .callout-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .callout-text {
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .callout.warn {
+      background: rgba(240, 168, 53, 0.06);
+      border-color: rgba(240, 168, 53, 0.25);
+    }
+
+    .callout.warn .callout-title {
+      color: var(--amber);
+    }
+
+    .callout.warn .callout-text {
+      color: #b8903a;
+    }
+
+    .callout.info {
+      background: rgba(107, 159, 255, 0.06);
+      border-color: rgba(107, 159, 255, 0.2);
+    }
+
+    .callout.info .callout-title {
+      color: var(--accent);
+    }
+
+    .callout.info .callout-text {
+      color: #7090c0;
+    }
+
+    .callout.ok {
+      background: rgba(78, 203, 141, 0.06);
+      border-color: rgba(78, 203, 141, 0.2);
+    }
+
+    .callout.ok .callout-title {
+      color: var(--green);
+    }
+
+    .callout.ok .callout-text {
+      color: #3a9060;
+    }
+
+    .callout.danger {
+      background: rgba(232, 85, 85, 0.06);
+      border-color: rgba(232, 85, 85, 0.2);
+    }
+
+    .callout.danger .callout-title {
+      color: var(--red);
+    }
+
+    .callout.danger .callout-text {
+      color: #a84040;
+    }
+
+    /* SPEC TABLE */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 12.5px;
+    }
+
+    .spec-table th {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text3);
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    .spec-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      vertical-align: top;
+    }
+
+    .spec-table tr:hover td {
+      background: var(--bg3);
+    }
+
+    .spec-table td:first-child {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .tag.green {
+      background: rgba(78, 203, 141, 0.12);
+      color: var(--green);
+    }
+
+    .tag.amber {
+      background: rgba(240, 168, 53, 0.12);
+      color: var(--amber);
+    }
+
+    .tag.red {
+      background: rgba(232, 85, 85, 0.12);
+      color: var(--red);
+    }
+
+    .tag.blue {
+      background: rgba(107, 159, 255, 0.12);
+      color: var(--accent);
+    }
+
+    .tag.purple {
+      background: rgba(168, 120, 240, 0.12);
+      color: var(--purple);
+    }
+
+    /* PIPELINE FLOW */
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin-bottom: 20px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .flow-step {
+      flex: 1;
+      padding: 14px 14px 12px;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+
+    .flow-step:last-child {
+      border-right: none;
+    }
+
+    .flow-step-num {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text3);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .flow-step-name {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .flow-step-sub {
+      font-size: 10.5px;
+      color: var(--text3);
+      line-height: 1.4;
+    }
+
+    .flow-step.accent {
+      border-top: 2px solid var(--accent);
+    }
+
+    .flow-step.green {
+      border-top: 2px solid var(--green);
+    }
+
+    .flow-step.amber {
+      border-top: 2px solid var(--amber);
+    }
+
+    .flow-step.purple {
+      border-top: 2px solid var(--purple);
+    }
+
+    .flow-step.teal {
+      border-top: 2px solid var(--teal);
+    }
+
+    /* DIVIDER */
+    .phase-divider {
+      margin: 48px 56px 0;
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* METRIC ROW */
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .metric-val {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
+      display: block;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* CHECKLIST */
+    .checklist {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+
+    .checklist li {
+      padding: 4px 0 4px 20px;
+      position: relative;
+      font-size: 12.5px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .checklist li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    .checklist li.ok::before {
+      content: '✓';
+      color: var(--green);
+    }
+
+    .checklist li.warn::before {
+      content: '!';
+      color: var(--amber);
+    }
+
+    /* FOOTER */
+    .doc-footer {
+      margin: 64px 56px 0;
+      padding: 24px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .doc-footer-left {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .doc-footer-right {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* INLINE CODE */
+    code {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--accent);
+    }
+
+    /* PROSE */
+    .prose {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.75;
+      margin-bottom: 16px;
+      max-width: 760px;
+    }
+
+    .prose strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ARCH DIAGRAM (pure CSS) */
+    .arch-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: stretch;
+    }
+
+    .arch-node {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11.5px;
+    }
+
+    .arch-node.hl {
+      border-color: var(--accent);
+      background: rgba(107, 159, 255, 0.06);
+    }
+
+    .arch-node .an-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .arch-node .an-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .arch-node .an-sub {
+      font-size: 10.5px;
+      color: var(--text3);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-family: var(--mono);
+      font-size: 16px;
+      padding: 4px 0;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    /* SECTION ANCHOR */
+    .section-anchor {
+      scroll-margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="badge">Studio Pipeline</span>
+      <h1>MetaHuman Batch<br>Inference System</h1>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-label">Overview</span>
+      <a class="nav-item active" href="#overview">
+        <span class="phase-dot" style="background:#6b9fff"></span>
+        Tổng quan hệ thống
+      </a>
+      <a class="nav-item" href="#hardware">
+        <span class="phase-dot" style="background:#6b9fff"></span>
+        Yêu cầu hardware
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-label">Phase 1 — Acquisition</span>
+      <a class="nav-item" href="#p1-scraping">
+        <span class="phase-dot" style="background:#f0a835"></span>
+        1.1 Video scraping
+      </a>
+      <a class="nav-item" href="#p1-filter">
+        <span class="phase-dot" style="background:#f0a835"></span>
+        1.2 Quality filter
+      </a>
+      <a class="nav-item" href="#p1-dedup">
+        <span class="phase-dot" style="background:#f0a835"></span>
+        1.3 Deduplication
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-label">Phase 2 — Preprocessing</span>
+      <a class="nav-item" href="#p2-video">
+        <span class="phase-dot" style="background:#a878f0"></span>
+        2.1 Video preprocessing
+      </a>
+      <a class="nav-item" href="#p2-audio">
+        <span class="phase-dot" style="background:#a878f0"></span>
+        2.2 Audio extraction
+      </a>
+      <a class="nav-item" href="#p2-face">
+        <span class="phase-dot" style="background:#a878f0"></span>
+        2.3 Face validation
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-label">Phase 3 — UE5 Inference</span>
+      <a class="nav-item" href="#p3-setup">
+        <span class="phase-dot" style="background:#4ecb8d"></span>
+        3.1 UE5 headless setup
+      </a>
+      <a class="nav-item" href="#p3-identity">
+        <span class="phase-dot" style="background:#4ecb8d"></span>
+        3.2 Identity management
+      </a>
+      <a class="nav-item" href="#p3-batch">
+        <span class="phase-dot" style="background:#4ecb8d"></span>
+        3.3 Batch solver loop
+      </a>
+      <a class="nav-item" href="#p3-export">
+        <span class="phase-dot" style="background:#4ecb8d"></span>
+        3.4 Curve export
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-label">Phase 4 — Post Processing</span>
+      <a class="nav-item" href="#p4-parse">
+        <span class="phase-dot" style="background:#38c9c9"></span>
+        4.1 Parse AnimSequence
+      </a>
+      <a class="nav-item" href="#p4-clean">
+        <span class="phase-dot" style="background:#38c9c9"></span>
+        4.2 Data cleaning
+      </a>
+      <a class="nav-item" href="#p4-store">
+        <span class="phase-dot" style="background:#38c9c9"></span>
+        4.3 Storage schema
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-label">Phase 5 — Ops</span>
+      <a class="nav-item" href="#p5-monitor">
+        <span class="phase-dot" style="background:#e87055"></span>
+        5.1 Monitoring
+      </a>
+      <a class="nav-item" href="#p5-recovery">
+        <span class="phase-dot" style="background:#e87055"></span>
+        5.2 Recovery & restart
+      </a>
+      <a class="nav-item" href="#p5-throughput">
+        <span class="phase-dot" style="background:#e87055"></span>
+        5.3 Throughput math
+      </a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero" id="overview">
+      <div class="hero-meta">Professional Studio Production — Technical Specification v1.0</div>
+      <h1>MetaHuman <span>Batch Inference</span><br>Pipeline System</h1>
+      <p class="hero-sub">Xử lý video từ TikTok / Instagram / YouTube → 135+ facial curves + audio motion, chạy liên tục
+        nhiều tháng trên RTX 3090.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="val">3</span>
+          <span class="lbl">nguồn video</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">135+</span>
+          <span class="lbl">MetaHuman curves</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">RTX 3090</span>
+          <span class="lbl">target hardware</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">UE 5.7</span>
+          <span class="lbl">solver version</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">24/7</span>
+          <span class="lbl">continuous ops</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- HARDWARE -->
+      <div class="phase-header section-anchor" id="hardware">
+        <span class="phase-number">INFRA</span>
+        <div class="phase-title-block">
+          <h2>Yêu cầu hardware & software</h2>
+          <p>Cấu hình tối thiểu và khuyến nghị cho production 24/7</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="metric-row">
+          <div class="metric-card">
+            <span class="metric-val">RTX 3090</span>
+            <span class="metric-label">24 GB VRAM — solver + preprocess</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">64 GB</span>
+            <span class="metric-label">RAM hệ thống (tối thiểu)</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">4 TB</span>
+            <span class="metric-label">NVMe SSD working storage</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val">Win 11</span>
+            <span class="metric-label">UE5 Animator — Windows only</span>
+          </div>
+        </div>
+
+        <table class="spec-table">
+          <tr>
+            <th>Component</th>
+            <th>Minimum</th>
+            <th>Recommended production</th>
+            <th>Note</th>
+          </tr>
+          <tr>
+            <td>GPU</td>
+            <td>RTX 3080 10GB</td>
+            <td>RTX 3090 24GB</td>
+            <td>VRAM quan trọng hơn CUDA cores — solver cần headroom</td>
+          </tr>
+          <tr>
+            <td>CPU</td>
+            <td>Ryzen 9 5900X</td>
+            <td>Ryzen 9 7950X / i9-13900K</td>
+            <td>Preprocessing video song song với solver</td>
+          </tr>
+          <tr>
+            <td>RAM</td>
+            <td>64 GB DDR4</td>
+            <td>128 GB DDR5</td>
+            <td>UE5 headless + video buffer chiếm 20–40 GB</td>
+          </tr>
+          <tr>
+            <td>Storage</td>
+            <td>2 TB NVMe</td>
+            <td>2× 2 TB NVMe RAID-0 + 10 TB HDD archive</td>
+            <td>Working set trên NVMe, output archive trên HDD</td>
+          </tr>
+          <tr>
+            <td>OS</td>
+            <td>Windows 10 22H2</td>
+            <td>Windows 11 23H2</td>
+            <td>Bắt buộc — MHA không support Linux/macOS</td>
+          </tr>
+          <tr>
+            <td>Python</td>
+            <td>3.10</td>
+            <td>3.11 (UE5 bundled)</td>
+            <td>Dùng UE5's bundled Python để gọi unreal module</td>
+          </tr>
+          <tr>
+            <td>UE version</td>
+            <td>5.6</td>
+            <td>5.7</td>
+            <td>5.7 có Python batch API đầy đủ cho compute farm</td>
+          </tr>
+        </table>
+
+        <div class="callout warn">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">RTX 3090 vs yêu cầu Epic</div>
+            <div class="callout-text">Epic recommend RTX 3080 10GB. RTX 3090 24GB VRAM cho phép chạy preprocessing (face
+              detection) song song với solver mà không cần swap VRAM — quan trọng cho throughput 24/7 liên tục.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 1 DIVIDER -->
+      <hr class="phase-divider">
+
+      <!-- PHASE 1.1 -->
+      <div class="phase-header section-anchor" id="p1-scraping">
+        <span class="phase-number">PHASE 1.1</span>
+        <div class="phase-title-block">
+          <h2>Video Acquisition — Scraping & Download</h2>
+          <p>Thu thập video từ TikTok, Instagram, YouTube với rate limiting và identity rotation</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="prose">
+          Mục tiêu của phase này là xây dựng một <strong>raw video corpus</strong> từ các nền tảng social media — tập
+          trung vào video cá nhân (talking head, vlog, interview) vì đây là nguồn dữ liệu tốt nhất cho facial motion
+          capture. Pipeline phải chạy được nhiều tuần/tháng mà không bị block.
+        </p>
+
+        <div class="flow">
+          <div class="flow-step accent">
+            <span class="flow-step-num">01</span>
+            <div class="flow-step-name">Search & discover</div>
+            <div class="flow-step-sub">Query API / scrape feed theo keyword, hashtag, creator</div>
+          </div>
+          <div class="flow-step amber">
+            <span class="flow-step-num">02</span>
+            <div class="flow-step-name">Metadata filter</div>
+            <div class="flow-step-sub">Lọc sơ bộ trước khi download: duration, resolution, face count</div>
+          </div>
+          <div class="flow-step green">
+            <span class="flow-step-num">03</span>
+            <div class="flow-step-name">Download</div>
+            <div class="flow-step-sub">yt-dlp với proxy rotation, rate limit, retry logic</div>
+          </div>
+          <div class="flow-step purple">
+            <span class="flow-step-num">04</span>
+            <div class="flow-step-name">Catalog</div>
+            <div class="flow-step-sub">SQLite job DB — track trạng thái mỗi video</div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-title">Downloader service với job queue</div>
+
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-filename">downloader/service.py</span>
+              <span class="code-lang">python</span>
+            </div>
+            <div class="code-body"><span class="cm"># Production downloader — xử lý TikTok / Instagram / YouTube</span>
+              <span class="cm"># Thiết kế cho chạy liên tục nhiều tháng với auto-recovery</span>
+
+              <span class="kw">import</span> sqlite3, subprocess, json, time, hashlib, os, logging
+              <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+              <span class="kw">from</span> datetime <span class="kw">import</span> datetime
+              <span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+              <span class="kw">from</span> typing <span class="kw">import</span> Optional
+
+              <span class="cm"># ─── Config ───────────────────────────────────────────────</span>
+              RAW_DIR = Path(<span class="st">"D:/pipeline/raw_video"</span>)
+              DB_PATH = Path(<span class="st">"D:/pipeline/jobs.db"</span>)
+              MAX_DURATION = <span class="num">600</span> <span class="cm"># giây — bỏ qua video > 10 phút</span>
+              MIN_DURATION = <span class="num">5</span> <span class="cm"># giây — bỏ qua quảng cáo ngắn</span>
+              MIN_HEIGHT = <span class="num">480</span> <span class="cm"># pixels</span>
+              MAX_RETRIES = <span class="num">3</span>
+
+              <span class="cm"># Proxy list — rotate để tránh rate limit</span>
+              <span class="cm"># Dùng residential proxies cho TikTok/IG — datacenter proxy bị block</span>
+              PROXIES = [
+              <span class="st">"http://user:pass@proxy1.example.com:8080"</span>,
+              <span class="st">"http://user:pass@proxy2.example.com:8080"</span>,
+              <span class="cm"># ... thêm ít nhất 10 proxies cho 24/7 operation</span>
+              ]
+
+              <span class="kw">class</span> <span class="cl">JobDB</span>:
+              <span class="st">"""SQLite job tracker — thread-safe, ACID."""</span>
+
+              <span class="kw">def</span> <span class="fn">__init__</span>(self, path: Path):
+              self.conn = sqlite3.connect(str(path), check_same_thread=<span class="kw">False</span>)
+              self.conn.execute(<span class="st">"""
+                CREATE TABLE IF NOT EXISTS videos (
+                id TEXT PRIMARY KEY,
+                url TEXT NOT NULL,
+                source TEXT NOT NULL, -- tiktok|instagram|youtube
+                status TEXT DEFAULT 'pending',
+                -- pending|downloaded|preprocessed|solved|done|failed
+                file_path TEXT,
+                duration REAL,
+                width INTEGER,
+                height INTEGER,
+                fps REAL,
+                error TEXT,
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
+                )"""</span>)
+              self.conn.execute(<span class="st">"""
+                CREATE INDEX IF NOT EXISTS idx_status
+                ON videos(status, source)"""</span>)
+              self.conn.commit()
+
+              <span class="kw">def</span> <span class="fn">add</span>(self, url: str, source: str) -> Optional[str]:
+              vid_id = hashlib.sha256(url.encode()).hexdigest()[:<span class="num">16</span>]
+              <span class="kw">try</span>:
+              self.conn.execute(
+              <span class="st">"INSERT OR IGNORE INTO videos(id, url, source) VALUES(?,?,?)"</span>,
+              (vid_id, url, source)
+              )
+              self.conn.commit()
+              <span class="kw">return</span> vid_id
+              <span class="kw">except</span> Exception <span class="kw">as</span> e:
+              logging.error(<span class="st">f"DB add error: </span>{e}<span class="st">"</span>)
+              <span class="kw">return</span> <span class="kw">None</span>
+
+              <span class="kw">def</span> <span class="fn">update_status</span>(self, vid_id: str, status: str,
+              **kwargs):
+              fields = <span class="st">", "</span>.join([<span class="st">f"{k}=?"</span> <span class="kw">for</span> k
+              <span class="kw">in</span> kwargs])
+              vals = list(kwargs.values()) + [<span class="st">"datetime('now')"</span>, vid_id]
+              self.conn.execute(
+              <span class="st">f"UPDATE videos SET status='{status}', {fields}, updated_at=? WHERE id=?"</span>,
+              vals
+              )
+              self.conn.commit()
+
+              <span class="kw">def</span> <span class="fn">get_pending</span>(self, limit=<span class="num">50</span>)
+              -> list:
+              cur = self.conn.execute(
+              <span class="st">"SELECT id, url, source FROM videos WHERE status='pending' LIMIT ?"</span>,
+              (limit,)
+              )
+              <span class="kw">return</span> cur.fetchall()
+
+
+              <span class="kw">def</span> <span class="fn">build_yt_dlp_cmd</span>(url: str, out_dir: Path, vid_id: str,
+              proxy: str) -> list:
+              <span class="st">"""Build yt-dlp command tối ưu cho facial capture data."""</span>
+              <span class="kw">return</span> [
+              <span class="st">"yt-dlp"</span>,
+              <span class="cm"># Format: ưu tiên 1080p H264, fallback 720p</span>
+              <span class="st">"-f"</span>, <span class="st">"bestvideo[height
+                <=1080][ext=mp4][vcodec^=avc]+bestaudio[ext=m4a]"< /span>
+                  <span class="st">"/bestvideo[height<=1080]+bestaudio /best[height<=1080]"</span>,
+                      <span class="st">"--merge-output-format"</span>, <span class="st">"mp4"</span>,
+                      <span class="cm"># Output naming — dùng vid_id để track</span>
+                      <span class="st">"-o"</span>, str(out_dir / <span class="st">f"{vid_id}.mp4"</span>),
+                      <span class="cm"># Rate limiting — crucial cho long-running operation</span>
+                      <span class="st">"--sleep-interval"</span>, <span class="st">"2"</span>,
+                      <span class="st">"--max-sleep-interval"</span>, <span class="st">"5"</span>,
+                      <span class="st">"--sleep-requests"</span>, <span class="st">"1"</span>,
+                      <span class="st">"--limit-rate"</span>, <span class="st">"5M"</span>, <span class="cm"># tránh
+                        bandwidth spike</span>
+                      <span class="cm"># Retry + error handling</span>
+                      <span class="st">"--retries"</span>, <span class="st">"3"</span>,
+                      <span class="st">"--fragment-retries"</span>, <span class="st">"3"</span>,
+                      <span class="st">"--socket-timeout"</span>, <span class="st">"30"</span>,
+                      <span class="cm"># Proxy cho anti-bot</span>
+                      <span class="st">"--proxy"</span>, proxy,
+                      <span class="cm"># Metadata sidecar — cần cho quality filter</span>
+                      <span class="st">"--write-info-json"</span>,
+                      <span class="st">"--no-playlist"</span>,
+                      <span class="cm"># Không download nếu đã có</span>
+                      <span class="st">"--no-overwrites"</span>,
+                      url
+                      ]
+
+
+                      <span class="kw">def</span> <span class="fn">validate_metadata</span>(info_json: dict) ->
+                      tuple[bool, str]:
+                      <span class="st">"""Pre-download filter — tránh waste bandwidth."""</span>
+                      duration = info_json.get(<span class="st">"duration"</span>, <span class="num">0</span>)
+                      height = info_json.get(<span class="st">"height"</span>, <span class="num">0</span>)
+
+                      <span class="kw">if</span> duration < MIN_DURATION: <span class="kw">return</span> <span
+                    class="kw">False</span>, <span class="st">f"Too short: {duration}s"</span>
+                  <span class="kw">if</span> duration > MAX_DURATION:
+                  <span class="kw">return</span> <span class="kw">False</span>, <span class="st">f"Too long:
+                    {duration}s"</span>
+                  <span class="kw">if</span> height < MIN_HEIGHT: <span class="kw">return
+              </span> <span class="kw">False</span>, <span class="st">f"Low res: {height}p"</span>
+
+              <span class="kw">return</span> <span class="kw">True</span>, <span class="st">"ok"</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout info">
+          <div class="callout-icon">ℹ</div>
+          <div class="callout-body">
+            <div class="callout-title">Legal & ethical consideration</div>
+            <div class="callout-text">Scraping từ TikTok/Instagram/YouTube cần tuân thủ ToS và luật bản quyền địa
+              phương. Với production studio, cần tham khảo legal counsel — đặc biệt khi dùng dữ liệu để train AI models
+              thương mại.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 1.2 -->
+      <div class="phase-header section-anchor" id="p1-filter">
+        <span class="phase-number">PHASE 1.2</span>
+        <div class="phase-title-block">
+          <h2>Quality Filter — Face & Video Validation</h2>
+          <p>Loại bỏ video không phù hợp trước khi đưa vào solver — tiết kiệm GPU time</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="prose">
+          Đây là bước <strong>critical nhất về ROI</strong>: mỗi video không hợp lệ đưa vào UE5 solver sẽ lãng phí 3–10
+          phút GPU time. Filter pipeline chạy trên CPU và chiếm &lt;2 giây/video — loại bỏ 40–60% corpus trước khi chạm
+          đến solver.
+        </p>
+
+        <table class="spec-table">
+          <tr>
+            <th>Filter</th>
+            <th>Tool</th>
+            <th>Threshold</th>
+            <th>Reject reason</th>
+          </tr>
+          <tr>
+            <td>Face detection</td>
+            <td>RetinaFace ONNX</td>
+            <td>≥1 face, conf > 0.85</td>
+            <td>Không có face hoặc quá nhỏ (&lt;15% frame)</td>
+          </tr>
+          <tr>
+            <td>Face size</td>
+            <td>Bounding box area</td>
+            <td>Face area > 10% frame</td>
+            <td>Face quá xa camera — solver kém chất lượng</td>
+          </tr>
+          <tr>
+            <td>Multi-face</td>
+            <td>Face count check</td>
+            <td>Đúng 1 face chủ đạo</td>
+            <td>&gt;2 face làm solver không biết track ai</td>
+          </tr>
+          <tr>
+            <td>Blur/motion blur</td>
+            <td>Laplacian variance</td>
+            <td>Variance > 100</td>
+            <td>Video bị mờ — solver ra noise</td>
+          </tr>
+          <tr>
+            <td>Occlusion</td>
+            <td>Facial landmark check</td>
+            <td>&lt;20% landmarks bị block</td>
+            <td>Đeo khẩu trang, kính đen nặng, tay che mặt</td>
+          </tr>
+          <tr>
+            <td>Lighting</td>
+            <td>Histogram analysis</td>
+            <td>Mean brightness 40–220</td>
+            <td>Backlit, underexposed, overexposed</td>
+          </tr>
+          <tr>
+            <td>FPS</td>
+            <td>ffprobe</td>
+            <td>≥24 fps</td>
+            <td>Video slideshow hoặc low framerate</td>
+          </tr>
+        </table>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">preprocessor/face_validator.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> cv2, numpy <span class="kw">as</span> np, onnxruntime
+            <span class="kw">as</span> ort
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+            <span class="kw">class</span> <span class="cl">FaceValidator</span>:
+            <span class="st">"""
+              Chạy trên CPU — không chiếm VRAM của solver.
+              Sample 10 frames đại diện, không đọc toàn bộ video.
+              """</span>
+
+            <span class="kw">def</span> <span class="fn">__init__</span>(self):
+            <span class="cm"># RetinaFace lightweight ONNX — 1.7MB, ~15ms/frame CPU</span>
+            self.detector = ort.InferenceSession(
+            <span class="st">"models/retinaface_mobile.onnx"</span>,
+            providers=[<span class="st">"CPUExecutionProvider"</span>]
+            )
+
+            <span class="kw">def</span> <span class="fn">validate_video</span>(self, video_path: Path) -> dict:
+            cap = cv2.VideoCapture(str(video_path))
+            total_frames = <span class="fn">int</span>(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            width = <span class="fn">int</span>(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = <span class="fn">int</span>(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+            result = {
+            <span class="st">"valid"</span>: <span class="kw">False</span>,
+            <span class="st">"fps"</span>: fps, <span class="st">"width"</span>: width, <span
+              class="st">"height"</span>: height,
+            <span class="st">"reject_reason"</span>: <span class="kw">None</span>
+            }
+
+            <span class="kw">if</span> fps < <span class="num">24</span>:
+              result[<span class="st">"reject_reason"</span>] = <span class="st">f"low_fps:{fps:.1f}"</span>
+              <span class="kw">return</span> result
+
+              <span class="cm"># Sample 10 frames trải đều — tránh đọc toàn bộ video</span>
+              sample_positions = np.linspace(<span class="num">0.05</span>, <span class="num">0.95</span>, <span
+                class="num">10</span>)
+              face_scores = []
+              blur_scores = []
+
+              <span class="kw">for</span> pos <span class="kw">in</span> sample_positions:
+              cap.set(cv2.CAP_PROP_POS_FRAMES, <span class="fn">int</span>(pos * total_frames))
+              ret, frame = cap.read()
+              <span class="kw">if not</span> ret: <span class="kw">continue</span>
+
+              <span class="cm"># Blur check — nhanh, chạy trước face detection</span>
+              gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+              blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+              blur_scores.append(blur_score)
+
+              <span class="cm"># Face detection</span>
+              faces = self.<span class="fn">_detect_faces</span>(frame)
+              face_scores.append(faces)
+
+              cap.release()
+
+              <span class="cm"># Aggregate — dùng median để robust với outlier frames</span>
+              valid_face_frames = [f <span class="kw">for</span> f <span class="kw">in</span> face_scores <span
+                class="kw">if</span> f[<span class="st">"count"</span>] == <span class="num">1</span>
+              <span class="kw">and</span> f[<span class="st">"max_area_ratio"</span>] > <span class="num">0.08</span>]
+              face_ratio = <span class="fn">len</span>(valid_face_frames) / <span class="fn">len</span>(face_scores)
+              <span class="kw">if</span> face_scores <span class="kw">else</span> <span class="num">0</span>
+              median_blur = np.median(blur_scores) <span class="kw">if</span> blur_scores <span class="kw">else</span>
+              <span class="num">0</span>
+
+              <span class="kw">if</span> face_ratio < <span class="num">0.6</span>:
+                result[<span class="st">"reject_reason"</span>] = <span
+                  class="st">f"face_coverage:{face_ratio:.2f}"</span>
+                <span class="kw">elif</span> median_blur < <span class="num">80</span>:
+                  result[<span class="st">"reject_reason"</span>] = <span class="st">f"blur:{median_blur:.1f}"</span>
+                  <span class="kw">else</span>:
+                  result[<span class="st">"valid"</span>] = <span class="kw">True</span>
+
+                  <span class="kw">return</span> result
+
+                  <span class="kw">def</span> <span class="fn">_detect_faces</span>(self, frame: np.ndarray) -> dict:
+                  <span class="cm"># Resize để tăng tốc detection, giữ aspect ratio</span>
+                  h, w = frame.shape[:<span class="num">2</span>]
+                  scale = <span class="num">640</span> / <span class="fn">max</span>(h, w)
+                  small = cv2.resize(frame, (<span class="fn">int</span>(w*scale), <span
+                    class="fn">int</span>(h*scale)))
+
+                  <span class="cm"># ... run ONNX inference ...</span>
+                  <span class="cm"># Trả về dict với face boxes, confidence, area ratio</span>
+                  <span class="kw">return</span> {<span class="st">"count"</span>: <span class="num">1</span>, <span
+                    class="st">"max_area_ratio"</span>: <span class="num">0.25</span>, <span class="st">"conf"</span>:
+                  <span class="num">0.95</span>}
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 1.3 -->
+      <div class="phase-header section-anchor" id="p1-dedup">
+        <span class="phase-number">PHASE 1.3</span>
+        <div class="phase-title-block">
+          <h2>Deduplication — Video & Identity</h2>
+          <p>Loại bỏ video trùng lặp và cùng nhân vật để đảm bảo diversity của dataset</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">preprocessor/dedup.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> imagehash <span class="kw">from</span> PIL <span
+              class="kw">import</span> Image
+            <span class="kw">import</span> cv2, numpy <span class="kw">as</span> np, sqlite3
+
+            <span class="kw">class</span> <span class="cl">VideoDeduplicator</span>:
+            <span class="st">"""
+              2 cấp dedup:
+              1. Video-level: perceptual hash của keyframes — bắt repost, duplicate upload
+              2. Identity-level: face embedding clustering — giới hạn N video/người
+              """</span>
+
+            <span class="kw">def</span> <span class="fn">video_phash</span>(self, video_path) -> str:
+            <span class="cm"># Lấy frame ở 10%, 50%, 90% — hash từng frame, concat</span>
+            hashes = []
+            cap = cv2.VideoCapture(str(video_path))
+            total = <span class="fn">int</span>(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+            <span class="kw">for</span> pos <span class="kw">in</span> [<span class="num">0.1</span>, <span
+              class="num">0.5</span>, <span class="num">0.9</span>]:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, <span class="fn">int</span>(pos * total))
+            ret, frame = cap.read()
+            <span class="kw">if</span> ret:
+            img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            hashes.append(<span class="fn">str</span>(imagehash.phash(img, hash_size=<span class="num">16</span>)))
+
+            cap.release()
+            <span class="kw">return</span> <span class="st">"_"</span>.join(hashes)
+
+            <span class="kw">def</span> <span class="fn">is_duplicate</span>(self, phash: str, db, threshold=<span
+              class="num">8</span>) -> bool:
+            <span class="cm"># Hamming distance < threshold → duplicate</span>
+                existing = db.execute(<span class="st">"SELECT phash FROM videos WHERE status != 'rejected'"</span>)
+                h1 = imagehash.hex_to_hash(phash.split(<span class="st">"_"</span>)[<span class="num">1</span>])
+                <span class="kw">for</span> (h_str,) <span class="kw">in</span> existing:
+                <span class="kw">if</span> h_str:
+                h2 = imagehash.hex_to_hash(h_str.split(<span class="st">"_"</span>)[<span class="num">1</span>])
+                <span class="kw">if</span> h1 - h2 < threshold: <span class="kw">return</span> <span
+              class="kw">True</span>
+            <span class="kw">return</span> <span class="kw">False</span>
+
+            <span class="kw">def</span> <span class="fn">face_embedding</span>(self, video_path, face_model) ->
+            np.ndarray:
+            <span class="cm"># ArcFace embedding — 512-dim vector đại diện identity</span>
+            <span class="cm"># Dùng để cluster — giới hạn 100 video/person max</span>
+            cap = cv2.VideoCapture(str(video_path))
+            total = <span class="fn">int</span>(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            cap.set(cv2.CAP_PROP_POS_FRAMES, <span class="fn">int</span>(<span class="num">0.5</span> * total))
+            ret, frame = cap.read()
+            cap.release()
+            <span class="kw">if not</span> ret: <span class="kw">return</span> <span class="kw">None</span>
+            <span class="kw">return</span> face_model.<span class="fn">get_embedding</span>(frame) <span class="cm">#
+              InsightFace</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 2 DIVIDER -->
+      <hr class="phase-divider">
+
+      <!-- PHASE 2.1 -->
+      <div class="phase-header section-anchor" id="p2-video">
+        <span class="phase-number">PHASE 2.1</span>
+        <div class="phase-title-block">
+          <h2>Video Preprocessing — Segment & Normalize</h2>
+          <p>Chuẩn hoá video trước khi đưa vào MHA solver — critical cho chất lượng output</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="callout warn">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Giới hạn quan trọng của MHA Mono Video Mode</div>
+            <div class="callout-text">MetaHuman Animator (mono mode) hoạt động tốt nhất với video: H264/H265 MP4, 1080p
+              hoặc 720p, 30fps cố định, không bị scene cut trong đoạn. Video dài (>5 phút) cần được segment thành đoạn
+              ≤3 phút để tránh solver drift và memory leak của UE5.</div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">preprocessor/video_normalize.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> subprocess, json
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+            <span class="kw">class</span> <span class="cl">VideoNormalizer</span>:
+            <span class="st">"""
+              Chuẩn hoá video cho MHA solver:
+              - Segment tại scene cut — tránh solver nhầm identity
+              - Cố định 30fps — solver expect constant framerate
+              - Scale về 1080p max — không upscale, chỉ downscale
+              - Audio: extract WAV 48kHz mono riêng cho audio solver
+              """</span>
+
+            SEGMENT_MAX_SEC = <span class="num">180</span> <span class="cm"># 3 phút max per segment</span>
+            TARGET_FPS = <span class="num">30</span>
+            TARGET_HEIGHT = <span class="num">1080</span>
+
+            <span class="kw">def</span> <span class="fn">detect_scene_cuts</span>(self, video_path: Path) ->
+            list[float]:
+            <span class="st">"""PySceneDetect — tìm hard cuts."""</span>
+            result = subprocess.run([
+            <span class="st">"scenedetect"</span>, <span class="st">"-i"</span>, str(video_path),
+            <span class="st">"detect-content"</span>, <span class="st">"--threshold"</span>, <span
+              class="st">"27"</span>,
+            <span class="st">"list-scenes"</span>, <span class="st">"-o"</span>, <span class="st">"/dev/null"</span>
+            ], capture_output=<span class="kw">True</span>, text=<span class="kw">True</span>)
+            <span class="cm"># Parse output để lấy timestamps</span>
+            <span class="cm"># ... returns list of cut timestamps in seconds</span>
+            <span class="kw">return</span> []
+
+            <span class="kw">def</span> <span class="fn">segment_and_normalize</span>(
+            self, video_path: Path, out_dir: Path
+            ) -> list[Path]:
+            <span class="st">"""
+              Segment video tại scene cuts, normalize mỗi segment.
+              Return list of output segment paths.
+              """</span>
+            cuts = self.<span class="fn">detect_scene_cuts</span>(video_path)
+
+            <span class="cm"># Chia thêm nếu segment dài hơn SEGMENT_MAX_SEC</span>
+            segments = self.<span class="fn">_make_time_windows</span>(
+            video_path, cuts, self.SEGMENT_MAX_SEC
+            )
+
+            out_paths = []
+            <span class="kw">for</span> i, (start, end) <span class="kw">in</span> <span
+              class="fn">enumerate</span>(segments):
+            out_path = out_dir / <span class="st">f"seg_{i:04d}.mp4"</span>
+            self.<span class="fn">_ffmpeg_normalize</span>(video_path, out_path, start, end)
+            out_paths.append(out_path)
+
+            <span class="kw">return</span> out_paths
+
+            <span class="kw">def</span> <span class="fn">_ffmpeg_normalize</span>(
+            self, inp: Path, out: Path, start: float, end: float
+            ):
+            duration = end - start
+            vf_filters = [
+            <span class="cm"># Scale: giữ aspect ratio, chỉ downscale</span>
+            <span class="st">f"scale='min({self.TARGET_HEIGHT},ih)':'min({self.TARGET_HEIGHT},iw)'"</span>
+            <span class="st">":force_original_aspect_ratio=decrease"</span>,
+            <span class="cm"># Pad thành multiple of 2 (H264 requirement)</span>
+            <span class="st">"pad=ceil(iw/2)*2:ceil(ih/2)*2"</span>,
+            <span class="cm"># Cố định fps — MHA cần constant framerate</span>
+            <span class="st">f"fps={self.TARGET_FPS}"</span>,
+            ]
+            subprocess.run([
+            <span class="st">"ffmpeg"</span>, <span class="st">"-y"</span>,
+            <span class="st">"-ss"</span>, <span class="fn">str</span>(start), <span class="st">"-t"</span>, <span
+              class="fn">str</span>(duration),
+            <span class="st">"-i"</span>, <span class="fn">str</span>(inp),
+            <span class="st">"-vf"</span>, <span class="st">","</span>.join(vf_filters),
+            <span class="st">"-c:v"</span>, <span class="st">"libx264"</span>,
+            <span class="st">"-crf"</span>, <span class="st">"18"</span>, <span class="cm"># chất lượng cao — solver
+              nhạy với artifacts</span>
+            <span class="st">"-preset"</span>, <span class="st">"fast"</span>,
+            <span class="st">"-pix_fmt"</span>, <span class="st">"yuv420p"</span>,
+            <span class="st">"-an"</span>, <span class="cm"># audio extract riêng ở phase 2.2</span>
+            <span class="fn">str</span>(out)
+            ], check=<span class="kw">True</span>)
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 2.2 -->
+      <div class="phase-header section-anchor" id="p2-audio">
+        <span class="phase-number">PHASE 2.2</span>
+        <div class="phase-title-block">
+          <h2>Audio Extraction & Processing</h2>
+          <p>Extract và clean audio — cần riêng cho audio-driven animation (tongue, jaw)</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">preprocessor/audio_pipeline.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> subprocess, numpy <span class="kw">as</span> np
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+            <span class="kw">class</span> <span class="cl">AudioProcessor</span>:
+            <span class="st">"""
+              MHA audio solver (Speech2Face / tongue model) cần:
+              - WAV, mono, 48000 Hz, 16-bit PCM
+              - Noise suppressed — background music kills tongue accuracy
+              - Segment timing sync với video segment
+
+              Audio cũng cần cho post-process:
+              - Phoneme alignment (Montreal Forced Aligner)
+              - Emotion classification
+              - VAD — biết khi nào nhân vật đang nói
+              """</span>
+
+            <span class="kw">def</span> <span class="fn">extract_and_clean</span>(
+            self, video_path: Path, out_wav: Path, seg_start: float, seg_dur: float
+            ):
+            <span class="cm"># Step 1: Extract audio với ffmpeg</span>
+            raw_wav = out_wav.with_suffix(<span class="st">".raw.wav"</span>)
+            subprocess.run([
+            <span class="st">"ffmpeg"</span>, <span class="st">"-y"</span>,
+            <span class="st">"-ss"</span>, <span class="fn">str</span>(seg_start), <span class="st">"-t"</span>, <span
+              class="fn">str</span>(seg_dur),
+            <span class="st">"-i"</span>, <span class="fn">str</span>(video_path),
+            <span class="st">"-vn"</span>,
+            <span class="st">"-ac"</span>, <span class="st">"1"</span>, <span class="cm"># mono</span>
+            <span class="st">"-ar"</span>, <span class="st">"48000"</span>, <span class="cm"># 48kHz — MHA
+              requirement</span>
+            <span class="st">"-acodec"</span>, <span class="st">"pcm_s16le"</span>,
+            <span class="fn">str</span>(raw_wav)
+            ], check=<span class="kw">True</span>)
+
+            <span class="cm"># Step 2: Noise suppression với DeepFilterNet (ONNX, CPU)</span>
+            <span class="cm"># Loại background music, echo, wind noise</span>
+            <span class="cm"># Giữ lại giọng nói — quan trọng cho tongue/jaw solver</span>
+            self.<span class="fn">_deepfilter_denoise</span>(raw_wav, out_wav)
+            raw_wav.unlink()
+
+            <span class="cm"># Step 3: VAD — Voice Activity Detection</span>
+            <span class="cm"># Silero VAD — 1.8MB ONNX model, nhanh</span>
+            vad_segments = self.<span class="fn">_silero_vad</span>(out_wav)
+
+            <span class="cm"># Step 4: Phoneme alignment (chạy async — không block pipeline)</span>
+            <span class="cm"># Montreal Forced Aligner — output TextGrid file</span>
+            <span class="cm"># Dùng sau này để align audio motion với facial curves</span>
+            <span class="kw">return</span> {<span class="st">"wav_path"</span>: out_wav, <span class="st">"vad"</span>:
+            vad_segments}
+
+            <span class="kw">def</span> <span class="fn">_deepfilter_denoise</span>(self, inp: Path, out: Path):
+            <span class="cm"># DeepFilterNet CLI hoặc Python API</span>
+            subprocess.run([
+            <span class="st">"deepFilter"</span>, <span class="fn">str</span>(inp),
+            <span class="st">"-o"</span>, <span class="fn">str</span>(out.parent)
+            ], check=<span class="kw">True</span>)
+
+            <span class="kw">def</span> <span class="fn">_silero_vad</span>(self, wav_path: Path) -> list[dict]:
+            <span class="cm"># Returns [{start: float, end: float, speech_prob: float}, ...]</span>
+            <span class="kw">return</span> [] <span class="cm"># implementation với silero-vad Python package</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 3 DIVIDER -->
+      <hr class="phase-divider">
+
+      <!-- PHASE 3.1 -->
+      <div class="phase-header section-anchor" id="p3-setup">
+        <span class="phase-number">PHASE 3.1</span>
+        <div class="phase-title-block">
+          <h2>UE5 Headless Setup — Production Configuration</h2>
+          <p>Launch UE5 không cần display, cấu hình cho long-running batch operation</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="callout info">
+          <div class="callout-icon">ℹ</div>
+          <div class="callout-body">
+            <div class="callout-title">UE 5.7 headless batch — điều kiện tiên quyết</div>
+            <div class="callout-text">Từ UE 5.7, Epic chính thức support Python batch scripting "offline on a compute
+              farm". Cần enable plugin MetaHumanAnimator và MetaHumanCreator trong project settings trước khi chạy
+              headless.</div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">ue5_runner/launch.bat</span>
+            <span class="code-lang">batch</span>
+          </div>
+          <div class="code-body"><span class="cm">:: Khởi động UE5 headless cho batch processing</span>
+            <span class="cm">:: -nullrhi: không cần display adapter cho rendering</span>
+            <span class="cm">:: NHƯNG GPU vẫn được dùng cho solver compute</span>
+            <span class="cm">:: -unattended: suppress tất cả dialog/popup</span>
+            <span class="cm">:: -nosplash: bỏ splash screen</span>
+            <span class="cm">:: -stdout: redirect log ra console</span>
+
+            <span class="kw">set</span> UE_PATH=<span class="st">C:\Program Files\Epic Games\UE_5.7</span>
+            <span class="kw">set</span> PROJECT=<span class="st">D:\pipeline\ue5_project\MHBatch.uproject</span>
+            <span class="kw">set</span> SCRIPT=<span class="st">D:\pipeline\ue5_runner\batch_solver.py</span>
+            <span class="kw">set</span> LOG_DIR=<span class="st">D:\pipeline\logs\ue5</span>
+
+            <span class="kw">"%UE_PATH%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"</span> ^
+            <span class="st">"%PROJECT%"</span> ^
+            <span class="st">-nullrhi</span> ^
+            <span class="st">-unattended</span> ^
+            <span class="st">-nosplash</span> ^
+            <span class="st">-nopause</span> ^
+            <span class="st">-stdout</span> ^
+            <span class="st">-AllowStdOutLogVerbosity</span> ^
+            <span class="st">-run=PythonScript</span> ^
+            <span class="st">-script="%SCRIPT%"</span> ^
+            <span class="st">-log="%LOG_DIR%\batch_%date:~-4%%date:~3,2%%date:~0,2%.log"</span>
+
+            <span class="cm">:: Auto-restart nếu crash — watchdog sẽ detect và relaunch</span>
+            <span class="kw">if</span> <span class="st">%ERRORLEVEL% NEQ 0</span> (
+            echo UE5 crashed with code %ERRORLEVEL%, restarting...
+            timeout /t 30
+            <span class="kw">goto</span> :start
+            )
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">ue5_runner/project_setup.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="cm"># Chạy một lần để setup project — không phải mỗi lần batch</span>
+            <span class="cm"># Cần UE5 mở với GUI lần đầu để enable plugins</span>
+
+            <span class="kw">import</span> unreal
+
+            <span class="kw">def</span> <span class="fn">setup_project</span>():
+            <span class="cm"># Verify plugins đã enabled</span>
+            plugins_ok = <span class="fn">all</span>([
+            unreal.PluginBlueprintLibrary.<span class="fn">is_plugin_enabled</span>(<span
+              class="st">"MetaHumanAnimator"</span>),
+            unreal.PluginBlueprintLibrary.<span class="fn">is_plugin_enabled</span>(<span
+              class="st">"MetaHumanCreator"</span>),
+            unreal.PluginBlueprintLibrary.<span class="fn">is_plugin_enabled</span>(<span
+              class="st">"PythonScriptPlugin"</span>),
+            ])
+            <span class="kw">assert</span> plugins_ok, <span class="st">"Enable all required plugins first!"</span>
+
+            <span class="cm"># Tắt autosave — sẽ block solver trong batch</span>
+            settings = unreal.AutoReimportSettings.<span class="fn">get_default_object</span>()
+
+            <span class="cm"># Set garbage collection aggressive để tránh memory leak</span>
+            <span class="cm"># sau hàng nghìn assets được tạo/xoá</span>
+            cvar = unreal.SystemLibrary.<span class="fn">execute_console_command</span>
+            cvar(<span class="kw">None</span>, <span class="st">"gc.TimeBetweenPurgingPendingKillObjects 30"</span>)
+            cvar(<span class="kw">None</span>, <span class="st">"gc.MaxObjectsNotConsideredByGC 0"</span>)
+            cvar(<span class="kw">None</span>, <span class="st">"r.RHIThread.Enable 0"</span>) <span class="cm">#
+              disable render thread</span>
+
+            unreal.log(<span class="st">"Project setup complete."</span>)
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 3.2 -->
+      <div class="phase-header section-anchor" id="p3-identity">
+        <span class="phase-number">PHASE 3.2</span>
+        <div class="phase-title-block">
+          <h2>Identity Management — Mono Video Mode</h2>
+          <p>Chiến lược tái sử dụng Identity để tăng throughput</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="prose">
+          Trong Mono Video mode của UE 5.6+, MHA <strong>không cần MetaHuman Identity riêng cho từng người</strong> —
+          solver học identity từ chính video performance. Tuy nhiên, nếu nhiều video của cùng một người, tạo shared
+          Identity một lần sẽ cải thiện chất lượng đáng kể và giảm thời gian solve.
+        </p>
+
+        <table class="spec-table">
+          <tr>
+            <th>Mode</th>
+            <th>Setup time</th>
+            <th>Solve quality</th>
+            <th>Khi nào dùng</th>
+          </tr>
+          <tr>
+            <td>No identity (mono auto)</td>
+            <td>0</td>
+            <td><span class="tag amber">Good</span></td>
+            <td>Dataset đa dạng nhiều người — default mode</td>
+          </tr>
+          <tr>
+            <td>Per-person identity</td>
+            <td>~10 phút/người</td>
+            <td><span class="tag green">Excellent</span></td>
+            <td>Cùng người, nhiều video — tạo identity 1 lần, reuse</td>
+          </tr>
+          <tr>
+            <td>Generic identity template</td>
+            <td>0 (pre-built)</td>
+            <td><span class="tag blue">Acceptable</span></td>
+            <td>Throughput tối đa, chấp nhận giảm accuracy 10–15%</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- PHASE 3.3 -->
+      <div class="phase-header section-anchor" id="p3-batch">
+        <span class="phase-number">PHASE 3.3</span>
+        <div class="phase-title-block">
+          <h2>Batch Solver Loop — Core Production Engine</h2>
+          <p>Vòng lặp Python chạy liên tục trong UE5 headless — xử lý queue 24/7</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">ue5_runner/batch_solver.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="cm"># ═══════════════════════════════════════════════════════════════
+              # MetaHuman Animator — Production Batch Solver
+              # Chạy trong UE5 headless, xử lý queue liên tục 24/7
+              # ═══════════════════════════════════════════════════════════════</span>
+
+            <span class="kw">import</span> unreal, sqlite3, time, json, logging, traceback
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+            <span class="cm"># ─── Config ────────────────────────────────────────────────────</span>
+            DB_PATH = <span class="st">r"D:\pipeline\jobs.db"</span>
+            VIDEO_STAGE_DIR = <span class="st">r"D:\pipeline\stage"</span> <span class="cm"># normalized segments</span>
+            OUTPUT_UASSET = <span class="st">r"D:\pipeline\ue5_output"</span> <span class="cm"># AnimSequence
+              assets</span>
+            UE_CONTENT_ROOT = <span class="st">"/Game/BatchOutput"</span>
+            LOG_FILE = <span class="st">r"D:\pipeline\logs\solver.log"</span>
+
+            POLL_INTERVAL = <span class="num">5</span> <span class="cm"># giây — poll DB khi không có job</span>
+            GC_EVERY = <span class="num">50</span> <span class="cm"># garbage collect sau N jobs</span>
+            RESTART_EVERY = <span class="num">500</span> <span class="cm"># restart UE5 process sau N jobs (memory
+              safety)</span>
+
+            logging.basicConfig(
+            filename=LOG_FILE, level=logging.INFO,
+            format=<span class="st">'%(asctime)s [%(levelname)s] %(message)s'</span>
+            )
+
+            <span class="kw">class</span> <span class="cl">BatchSolverSession</span>:
+
+            <span class="kw">def</span> <span class="fn">__init__</span>(self):
+            self.db = sqlite3.<span class="fn">connect</span>(DB_PATH, check_same_thread=<span class="kw">False</span>)
+            self.jobs_processed = <span class="num">0</span>
+            self.asset_tools = unreal.AssetToolsHelpers.<span class="fn">get_asset_tools</span>()
+
+            <span class="kw">def</span> <span class="fn">run_forever</span>(self):
+            <span class="st">"""Main loop — chạy cho đến khi RESTART_EVERY jobs."""</span>
+            unreal.log(<span class="st">"[Batch] Solver session started."</span>)
+
+            <span class="kw">while</span> self.jobs_processed < RESTART_EVERY: jobs=self.<span class="fn">
+              _get_pending_jobs</span>(batch_size=<span class="num">1</span>)
+
+              <span class="kw">if not</span> jobs:
+              unreal.log(<span class="st">"[Batch] Queue empty. Polling..."</span>)
+              time.<span class="fn">sleep</span>(POLL_INTERVAL)
+              <span class="kw">continue</span>
+
+              <span class="kw">for</span> job <span class="kw">in</span> jobs:
+              self.<span class="fn">_process_job</span>(job)
+              self.jobs_processed += <span class="num">1</span>
+
+              <span class="kw">if</span> self.jobs_processed % GC_EVERY == <span class="num">0</span>:
+              self.<span class="fn">_force_gc</span>()
+
+              unreal.log(<span class="st">f"[Batch] {RESTART_EVERY} jobs done. Requesting restart."</span>)
+              <span class="cm"># Ghi flag để watchdog biết cần restart (không phải crash)</span>
+              Path(<span class="st">r"D:\pipeline\flags\restart_requested"</span>).<span class="fn">touch</span>()
+
+              <span class="kw">def</span> <span class="fn">_process_job</span>(self, job: dict):
+              vid_id = job[<span class="st">"id"</span>]
+              seg_path = Path(job[<span class="st">"segment_path"</span>])
+              wav_path = Path(job[<span class="st">"wav_path"</span>])
+
+              unreal.log(<span class="st">f"[Batch] Processing: {vid_id}"</span>)
+              self.<span class="fn">_update_status</span>(vid_id, <span class="st">"solving"</span>)
+
+              <span class="kw">try</span>:
+              <span class="cm"># ── Step 1: Ingest video → CaptureData asset ──────────</span>
+              capture_data = self.<span class="fn">_ingest_capture_data</span>(
+              vid_id, seg_path, wav_path
+              )
+
+              <span class="cm"># ── Step 2: Create MetaHumanPerformance asset ─────────</span>
+              perf_path = <span class="st">f"{UE_CONTENT_ROOT}/Perf_{vid_id}"</span>
+              perf = self.asset_tools.<span class="fn">create_asset</span>(
+              <span class="st">f"Perf_{vid_id}"</span>,
+              UE_CONTENT_ROOT,
+              unreal.MetaHumanPerformance,
+              unreal.MetaHumanPerformanceFactoryNew()
+              )
+
+              <span class="cm"># Config: mono mode, không cần depth data</span>
+              perf.<span class="fn">set_editor_property</span>(<span class="st">"capture_data"</span>, capture_data)
+              perf.<span class="fn">set_editor_property</span>(<span class="st">"input_type"</span>,
+              unreal.MetaHumanPerformanceInputType.MONOCULAR_FOOTAGE)
+
+              <span class="cm"># Audio solver — enable để lấy tongue/jaw curves từ audio</span>
+              perf.<span class="fn">set_editor_property</span>(<span class="st">"use_audio"</span>, <span
+                class="kw">True</span>)
+
+              <span class="cm"># ── Step 3: Run solve ──────────────────────────────────</span>
+              t_start = time.<span class="fn">time</span>()
+              perf.<span class="fn">process_performance</span>()
+              solve_time = time.<span class="fn">time</span>() - t_start
+
+              unreal.log(<span class="st">f"[Batch] Solved in {solve_time:.1f}s: {vid_id}"</span>)
+
+              <span class="cm"># ── Step 4: Export AnimSequence ───────────────────────</span>
+              anim_path = self.<span class="fn">_export_animation</span>(perf, vid_id)
+
+              <span class="cm"># ── Step 5: Cleanup interim assets ────────────────────</span>
+              self.<span class="fn">_cleanup_assets</span>(capture_data, perf)
+
+              self.<span class="fn">_update_status</span>(vid_id, <span class="st">"solved"</span>,
+              anim_uasset=anim_path,
+              solve_time=solve_time)
+
+              <span class="kw">except</span> Exception <span class="kw">as</span> e:
+              err = traceback.<span class="fn">format_exc</span>()
+              logging.error(<span class="st">f"Job failed {vid_id}: {err}"</span>)
+              self.<span class="fn">_update_status</span>(vid_id, <span class="st">"failed"</span>, error=<span
+                class="fn">str</span>(e)[:<span class="num">512</span>])
+
+              <span class="kw">def</span> <span class="fn">_ingest_capture_data</span>(
+              self, vid_id: str, seg_path: Path, wav_path: Path
+              ) -> unreal.Object:
+              <span class="st">"""
+                Tạo MonoCaptureData asset từ video file.
+                Đây là bước UE5 copy video vào project — cần đủ disk space.
+                """</span>
+              factory = unreal.MetaHumanMonoCaptureDataFactory()
+              factory.<span class="fn">set_editor_property</span>(<span class="st">"source_footage_path"</span>,
+              str(seg_path))
+              factory.<span class="fn">set_editor_property</span>(<span class="st">"source_audio_path"</span>,
+              str(wav_path))
+
+              capture = self.asset_tools.<span class="fn">create_asset</span>(
+              <span class="st">f"Cap_{vid_id}"</span>,
+              UE_CONTENT_ROOT,
+              unreal.MetaHumanMonoCaptureData,
+              factory
+              )
+              <span class="kw">return</span> capture
+
+              <span class="kw">def</span> <span class="fn">_export_animation</span>(self, perf, vid_id: str) -> str:
+              <span class="st">"""Export AnimSequence — chứa 135+ facial curves."""</span>
+              anim_name = <span class="st">f"Anim_{vid_id}"</span>
+              perf.<span class="fn">set_editor_property</span>(
+              <span class="st">"output_animation_asset_path"</span>,
+              <span class="st">f"{UE_CONTENT_ROOT}/{anim_name}"</span>
+              )
+              perf.<span class="fn">export_animation</span>(
+              unreal.PerformanceExportRange.WHOLE_SEQUENCE
+              )
+              <span class="cm"># Save asset to disk</span>
+              unreal.EditorAssetLibrary.<span class="fn">save_asset</span>(
+              <span class="st">f"{UE_CONTENT_ROOT}/{anim_name}"</span>
+              )
+              <span class="kw">return</span> <span class="st">f"{UE_CONTENT_ROOT}/{anim_name}"</span>
+
+              <span class="kw">def</span> <span class="fn">_cleanup_assets</span>(self, *assets):
+              <span class="st">"""Xoá interim assets để tránh disk và memory bloat."""</span>
+              <span class="kw">for</span> asset <span class="kw">in</span> assets:
+              path = asset.<span class="fn">get_path_name</span>()
+              unreal.EditorAssetLibrary.<span class="fn">delete_asset</span>(path)
+
+              <span class="kw">def</span> <span class="fn">_force_gc</span>(self):
+              <span class="st">"""Force UE5 garbage collection — chạy mỗi N jobs."""</span>
+              unreal.SystemLibrary.<span class="fn">execute_console_command</span>(
+              <span class="kw">None</span>, <span class="st">"gc.CollectGarbageEveryFrame 1"</span>
+              )
+              time.<span class="fn">sleep</span>(<span class="num">2</span>)
+              unreal.SystemLibrary.<span class="fn">execute_console_command</span>(
+              <span class="kw">None</span>, <span class="st">"gc.CollectGarbageEveryFrame 0"</span>
+              )
+
+              <span class="kw">def</span> <span class="fn">_get_pending_jobs</span>(self, batch_size=<span
+                class="num">1</span>) -> list:
+              cur = self.db.<span class="fn">execute</span>(
+              <span class="st">"""SELECT id, segment_path, wav_path
+                FROM segments
+                WHERE status = 'preprocessed'
+                ORDER BY priority DESC, created_at ASC
+                LIMIT ?"""</span>,
+              (batch_size,)
+              )
+              <span class="kw">return</span> [<span class="fn">dict</span>(row) <span class="kw">for</span> row <span
+                class="kw">in</span> cur.<span class="fn">fetchall</span>()]
+
+              <span class="kw">def</span> <span class="fn">_update_status</span>(self, vid_id: str, status: str,
+              **kwargs):
+              fields = <span class="st">", "</span>.<span class="fn">join</span>([<span class="st">f"{k}=?"</span> <span
+                class="kw">for</span> k <span class="kw">in</span> kwargs])
+              vals = list(kwargs.values()) + [status, vid_id]
+              sql = <span class="st">f"UPDATE segments SET {fields}, status=? WHERE id=?"</span> \
+              <span class="kw">if</span> fields <span class="kw">else</span> <span class="st">"UPDATE segments SET
+                status=? WHERE id=?"</span>
+              self.db.<span class="fn">execute</span>(sql, vals)
+              self.db.<span class="fn">commit</span>()
+
+
+              <span class="cm"># Entry point — được gọi bởi UE5 -run=PythonScript</span>
+              session = <span class="fn">BatchSolverSession</span>()
+              session.<span class="fn">run_forever</span>()
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 3.4 -->
+      <div class="phase-header section-anchor" id="p3-export">
+        <span class="phase-number">PHASE 3.4</span>
+        <div class="phase-title-block">
+          <h2>Curve Export — Trích xuất 135+ curves từ AnimSequence</h2>
+          <p>Đọc và serialize toàn bộ facial curve data ra format ngoài UE5</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="prose">
+          AnimSequence trong UE5 lưu 135+ float curves per frame. Cần extract ra <strong>ngoài UE5 ecosystem</strong> để
+          dùng cho training data, analytics, hoặc retarget sang rig khác. Làm trong cùng Python session để tránh
+          overhead load UE lần nữa.
+        </p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">ue5_runner/curve_extractor.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> unreal, json, numpy <span class="kw">as</span> np
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+            <span class="cm"># 135+ MetaHuman facial curves — đầy đủ danh sách</span>
+            <span class="cm"># Bao gồm: Control rig curves + ARKit-compatible blendshapes</span>
+            MH_FACE_CURVES = [
+            <span class="cm"># Eye curves</span>
+            <span class="st">"CTRL_L_eye_blink"</span>, <span class="st">"CTRL_R_eye_blink"</span>,
+            <span class="st">"CTRL_L_eye_squint"</span>, <span class="st">"CTRL_R_eye_squint"</span>,
+            <span class="st">"CTRL_L_eye_wide"</span>, <span class="st">"CTRL_R_eye_wide"</span>,
+            <span class="st">"CTRL_L_eye_lookUp"</span>, <span class="st">"CTRL_R_eye_lookUp"</span>,
+            <span class="st">"CTRL_L_eye_lookDown"</span>, <span class="st">"CTRL_R_eye_lookDown"</span>,
+            <span class="st">"CTRL_L_eye_lookIn"</span>, <span class="st">"CTRL_R_eye_lookIn"</span>,
+            <span class="st">"CTRL_L_eye_lookOut"</span>, <span class="st">"CTRL_R_eye_lookOut"</span>,
+            <span class="cm"># Brow curves (14 curves)</span>
+            <span class="st">"CTRL_L_brow_raise_inner"</span>, <span class="st">"CTRL_R_brow_raise_inner"</span>,
+            <span class="st">"CTRL_L_brow_raise_outer"</span>, <span class="st">"CTRL_R_brow_raise_outer"</span>,
+            <span class="st">"CTRL_L_brow_down"</span>, <span class="st">"CTRL_R_brow_down"</span>,
+            <span class="cm"># Nose</span>
+            <span class="st">"CTRL_nose_wrinkle_L"</span>, <span class="st">"CTRL_nose_wrinkle_R"</span>,
+            <span class="st">"CTRL_nose_sneer_L"</span>, <span class="st">"CTRL_nose_sneer_R"</span>,
+            <span class="cm"># Cheek</span>
+            <span class="st">"CTRL_L_cheek_raise"</span>, <span class="st">"CTRL_R_cheek_raise"</span>,
+            <span class="st">"CTRL_L_cheek_puff"</span>, <span class="st">"CTRL_R_cheek_puff"</span>,
+            <span class="cm"># Mouth (major group — ~40 curves)</span>
+            <span class="st">"CTRL_mouth_open"</span>, <span class="st">"CTRL_mouth_smile_L"</span>, <span
+              class="st">"CTRL_mouth_smile_R"</span>,
+            <span class="st">"CTRL_mouth_frown_L"</span>, <span class="st">"CTRL_mouth_frown_R"</span>,
+            <span class="st">"CTRL_mouth_dimple_L"</span>, <span class="st">"CTRL_mouth_dimple_R"</span>,
+            <span class="st">"CTRL_mouth_press_L"</span>, <span class="st">"CTRL_mouth_press_R"</span>,
+            <span class="st">"CTRL_mouth_pucker"</span>, <span class="st">"CTRL_mouth_funnel"</span>,
+            <span class="st">"CTRL_mouth_stretch_L"</span>, <span class="st">"CTRL_mouth_stretch_R"</span>,
+            <span class="st">"CTRL_mouth_roll_upper"</span>, <span class="st">"CTRL_mouth_roll_lower"</span>,
+            <span class="st">"CTRL_mouth_shrug_upper"</span>, <span class="st">"CTRL_mouth_shrug_lower"</span>,
+            <span class="st">"CTRL_mouth_close"</span>,
+            <span class="cm"># Jaw + Tongue</span>
+            <span class="st">"CTRL_jaw_open"</span>, <span class="st">"CTRL_jaw_fwd"</span>, <span
+              class="st">"CTRL_jaw_L"</span>, <span class="st">"CTRL_jaw_R"</span>,
+            <span class="st">"CTRL_tongue_tip_raise"</span>, <span class="st">"CTRL_tongue_back_down"</span>,
+            <span class="st">"CTRL_tongue_out"</span>, <span class="st">"CTRL_tongue_L"</span>, <span
+              class="st">"CTRL_tongue_R"</span>,
+            <span class="cm"># Head pose (6DOF)</span>
+            <span class="st">"CTRL_head_tx"</span>, <span class="st">"CTRL_head_ty"</span>, <span
+              class="st">"CTRL_head_tz"</span>,
+            <span class="st">"CTRL_head_rx"</span>, <span class="st">"CTRL_head_ry"</span>, <span
+              class="st">"CTRL_head_rz"</span>,
+            <span class="cm"># ... (tiếp tục đến 135+)</span>
+            ]
+
+            <span class="kw">def</span> <span class="fn">extract_curves_to_npz</span>(
+            anim_asset_path: str,
+            out_path: Path,
+            fps: float = <span class="num">30.0</span>
+            ) -> dict:
+            <span class="st">"""
+              Extract tất cả curves từ AnimSequence → .npz file.
+              Format: {curve_name: np.array shape (N_frames,)}
+              Kèm metadata: fps, duration, n_frames, timestamp.
+              """</span>
+            anim = unreal.EditorAssetLibrary.<span class="fn">load_asset</span>(anim_asset_path)
+            <span class="kw">if not</span> anim:
+            <span class="kw">raise</span> ValueError(<span class="st">f"Cannot load: {anim_asset_path}"</span>)
+
+            n_frames = <span class="fn">int</span>(anim.<span class="fn">get_play_length</span>() * fps)
+            curve_data = {}
+
+            <span class="cm"># Extract mỗi curve</span>
+            <span class="kw">for</span> curve_name <span class="kw">in</span> MH_FACE_CURVES:
+            values = []
+            <span class="kw">for</span> frame <span class="kw">in</span> <span class="fn">range</span>(n_frames):
+            t = frame / fps
+            val = unreal.AnimationLibrary.<span class="fn">get_float_curve_value</span>(
+            anim, curve_name, t
+            )
+            values.append(val)
+            curve_data[curve_name] = np.array(values, dtype=np.float32)
+
+            <span class="cm"># Cũng extract bone transforms (head, neck) cho head pose</span>
+            bone_data = <span class="fn">extract_bone_transforms</span>(anim, n_frames, fps)
+
+            <span class="cm"># Save compressed</span>
+            np.<span class="fn">savez_compressed</span>(
+            out_path,
+            **curve_data,
+            **bone_data,
+            fps=np.array([fps]),
+            n_frames=np.array([n_frames]),
+            )
+
+            metadata = {
+            <span class="st">"n_curves"</span>: <span class="fn">len</span>(curve_data),
+            <span class="st">"n_frames"</span>: n_frames,
+            <span class="st">"duration_s"</span>: n_frames / fps,
+            <span class="st">"curve_names"</span>: list(curve_data.keys()),
+            }
+
+            <span class="kw">return</span> metadata
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 4 DIVIDER -->
+      <hr class="phase-divider">
+
+      <!-- PHASE 4.1 -->
+      <div class="phase-header section-anchor" id="p4-parse">
+        <span class="phase-number">PHASE 4.1</span>
+        <div class="phase-title-block">
+          <h2>Post-Processing — Parse & Validate Output</h2>
+          <p>Xử lý .npz output, validate curves, detect solver failures</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">postprocessor/validate_output.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> numpy <span class="kw">as</span> np
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+            <span class="kw">from</span> scipy.signal <span class="kw">import</span> butter, filtfilt
+
+            <span class="kw">class</span> <span class="cl">CurveValidator</span>:
+            <span class="st">"""
+              Sau khi extract curves, detect các failure modes của MHA solver:
+              1. Solver drift — curves đột ngột nhảy về 0 hoặc về max
+              2. Frozen curves — không thay đổi trong đoạn dài (solver stuck)
+              3. Jitter — noise tần số cao không tự nhiên (solver uncertain)
+              4. Range violation — giá trị ngoài [0, 1] bình thường
+              """</span>
+
+            JITTER_THRESHOLD = <span class="num">0.15</span> <span class="cm"># std dev per frame — quá cao =
+              jitter</span>
+            FROZEN_THRESHOLD = <span class="num">60</span> <span class="cm"># số frames lien tiếp không đổi</span>
+            DRIFT_THRESHOLD = <span class="num">0.8</span> <span class="cm"># jump > 0.8 in 1 frame = drift</span>
+
+            <span class="kw">def</span> <span class="fn">validate</span>(self, npz_path: Path) -> dict:
+            data = np.<span class="fn">load</span>(npz_path, allow_pickle=<span class="kw">False</span>)
+            results = {<span class="st">"valid"</span>: <span class="kw">True</span>, <span class="st">"issues"</span>:
+            [], <span class="st">"quality_score"</span>: <span class="num">1.0</span>}
+
+            curve_names = [k <span class="kw">for</span> k <span class="kw">in</span> data.files
+            <span class="kw">if</span> k.<span class="fn">startswith</span>(<span class="st">"CTRL_"</span>)]
+
+            <span class="kw">for</span> name <span class="kw">in</span> curve_names:
+            curve = data[name]
+
+            <span class="cm"># Check jitter</span>
+            diff = np.abs(np.diff(curve))
+            <span class="kw">if</span> np.mean(diff) > self.JITTER_THRESHOLD:
+            results[<span class="st">"issues"</span>].append(
+            {<span class="st">"type"</span>: <span class="st">"jitter"</span>, <span class="st">"curve"</span>: name,
+            <span class="st">"severity"</span>: <span class="fn">float</span>(np.mean(diff))}
+            )
+            results[<span class="st">"quality_score"</span>] -= <span class="num">0.02</span>
+
+            <span class="cm"># Check frozen segments</span>
+            frozen_runs = self.<span class="fn">_count_frozen_runs</span>(curve)
+            <span class="kw">if</span> frozen_runs > self.FROZEN_THRESHOLD:
+            results[<span class="st">"issues"</span>].append(
+            {<span class="st">"type"</span>: <span class="st">"frozen"</span>, <span class="st">"curve"</span>: name,
+            <span class="st">"max_run"</span>: frozen_runs}
+            )
+
+            <span class="cm"># Check drift</span>
+            max_jump = np.max(diff) <span class="kw">if</span> len(diff) > <span class="num">0</span> <span
+              class="kw">else</span> <span class="num">0</span>
+            <span class="kw">if</span> max_jump > self.DRIFT_THRESHOLD:
+            results[<span class="st">"issues"</span>].append(
+            {<span class="st">"type"</span>: <span class="st">"drift"</span>, <span class="st">"curve"</span>: name,
+            <span class="st">"max_jump"</span>: <span class="fn">float</span>(max_jump)}
+            )
+            results[<span class="st">"quality_score"</span>] -= <span class="num">0.05</span>
+
+            results[<span class="st">"quality_score"</span>] = <span class="fn">max</span>(<span class="num">0</span>,
+            results[<span class="st">"quality_score"</span>])
+            results[<span class="st">"valid"</span>] = results[<span class="st">"quality_score"</span>] > <span
+              class="num">0.5</span>
+            <span class="kw">return</span> results
+
+            <span class="kw">def</span> <span class="fn">smooth_curves</span>(self, npz_path: Path, out_path: Path,
+            cutoff_hz=<span class="num">15</span>):
+            <span class="st">"""
+              Low-pass filter — loại bỏ jitter tần số cao.
+              Giữ lại chuyển động tự nhiên (0.5–12 Hz).
+              Cutoff 15 Hz là conservative — giữ micro-expressions.
+              """</span>
+            data = np.<span class="fn">load</span>(npz_path, allow_pickle=<span class="kw">False</span>)
+            fps = <span class="fn">float</span>(data[<span class="st">"fps"</span>][<span class="num">0</span>])
+            nyq = fps / <span class="num">2</span>
+            b, a = <span class="fn">butter</span>(<span class="num">4</span>, cutoff_hz / nyq, btype=<span
+              class="st">"low"</span>)
+
+            smoothed = {}
+            <span class="kw">for</span> key <span class="kw">in</span> data.files:
+            <span class="kw">if</span> key.<span class="fn">startswith</span>(<span class="st">"CTRL_"</span>) <span
+              class="kw">and</span> data[key].ndim == <span class="num">1</span>:
+            smoothed[key] = <span class="fn">filtfilt</span>(b, a, data[key])
+            <span class="kw">else</span>:
+            smoothed[key] = data[key]
+
+            np.<span class="fn">savez_compressed</span>(out_path, **smoothed)
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 4.3 -->
+      <div class="phase-header section-anchor" id="p4-store">
+        <span class="phase-number">PHASE 4.3</span>
+        <div class="phase-title-block">
+          <h2>Storage Schema — Long-term Archive</h2>
+          <p>Tổ chức lưu trữ cho hàng chục nghìn video đã xử lý</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">storage/directory_layout.txt</span>
+            <span class="code-lang">text</span>
+          </div>
+          <div class="code-body">D:\pipeline\
+            ├── raw_video\ ← Video gốc download từ platform
+            │ ├── tiktok\
+            │ ├── instagram\
+            │ └── youtube\
+            │
+            ├── stage\ ← Normalized segments (video + wav)
+            │ └── {vid_id}\
+            │ ├── seg_0000.mp4 ← Video segment (30fps, H264)
+            │ ├── seg_0000.wav ← Audio (48kHz mono, denoised)
+            │ └── seg_0000.meta.json
+            │
+            ├── curves\ ← Final output — curves + metadata
+            │ └── {vid_id}\
+            │ ├── seg_0000.npz ← 135 curves × N frames (compressed)
+            │ ├── seg_0000.smooth.npz ← Low-pass filtered version
+            │ ├── seg_0000.quality.json ← Validation report
+            │ └── seg_0000.audio.json ← VAD + phoneme alignment
+            │
+            ├── ue5_output\ ← UE5 AnimSequence .uasset (keep 7 days)
+            │
+            ├── logs\
+            │ ├── solver.log ← UE5 solver log
+            │ ├── preprocessor.log
+            │ └── monitor.log
+            │
+            ├── jobs.db ← SQLite master job database
+            └── flags\ ← IPC flags giữa processes
+            ├── pause_requested ← Pause solver (maintenance)
+            └── restart_requested ← Controlled restart sau N jobs
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-title">NPZ format specification</div>
+          <table class="spec-table">
+            <tr>
+              <th>Key</th>
+              <th>Shape</th>
+              <th>Dtype</th>
+              <th>Description</th>
+            </tr>
+            <tr>
+              <td>CTRL_*</td>
+              <td>(N_frames,)</td>
+              <td>float32</td>
+              <td>135+ individual curve values [0, 1]</td>
+            </tr>
+            <tr>
+              <td>head_rotation</td>
+              <td>(N_frames, 3)</td>
+              <td>float32</td>
+              <td>Euler angles (pitch, yaw, roll) in degrees</td>
+            </tr>
+            <tr>
+              <td>head_translation</td>
+              <td>(N_frames, 3)</td>
+              <td>float32</td>
+              <td>XYZ translation in cm</td>
+            </tr>
+            <tr>
+              <td>fps</td>
+              <td>(1,)</td>
+              <td>float32</td>
+              <td>Frames per second của animation</td>
+            </tr>
+            <tr>
+              <td>n_frames</td>
+              <td>(1,)</td>
+              <td>int32</td>
+              <td>Tổng số frames</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- PHASE 5 -->
+      <hr class="phase-divider">
+
+      <!-- PHASE 5.1 -->
+      <div class="phase-header section-anchor" id="p5-monitor">
+        <span class="phase-number">PHASE 5.1</span>
+        <div class="phase-title-block">
+          <h2>Monitoring — Production Observability</h2>
+          <p>Dashboard và alerting cho long-running operation nhiều tháng</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-filename">monitor/watchdog.py</span>
+            <span class="code-lang">python</span>
+          </div>
+          <div class="code-body"><span class="kw">import</span> psutil, sqlite3, time, subprocess, logging
+            <span class="kw">from</span> pathlib <span class="kw">import</span> Path
+            <span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+            <span class="kw">class</span> <span class="cl">PipelineWatchdog</span>:
+            <span class="st">"""
+              Chạy độc lập với UE5 process.
+              Detect và tự động recover các failure modes:
+              - UE5 crash → restart
+              - Memory leak → controlled restart
+              - Disk full → pause + alert
+              - GPU temperature → throttle
+              - Solver hung → kill + requeue
+              """</span>
+
+            UE_PROCESS_NAME = <span class="st">"UnrealEditor-Cmd.exe"</span>
+            MAX_VRAM_GB = <span class="num">22</span> <span class="cm"># RTX 3090 max safe — leave 2GB headroom</span>
+            MAX_RAM_GB = <span class="num">100</span> <span class="cm"># system RAM threshold</span>
+            MAX_GPU_TEMP = <span class="num">85</span> <span class="cm"># Celsius — throttle above</span>
+            MIN_DISK_GB = <span class="num">100</span> <span class="cm"># pause if staging disk below 100 GB</span>
+            JOB_TIMEOUT_MIN = <span class="num">15</span> <span class="cm"># kill job if > 15 min (3min video =
+              hung)</span>
+            CHECK_INTERVAL = <span class="num">30</span> <span class="cm"># giây</span>
+
+            <span class="kw">def</span> <span class="fn">run_forever</span>(self):
+            <span class="kw">while</span> <span class="kw">True</span>:
+            <span class="kw">try</span>:
+            self.<span class="fn">_check_ue5_alive</span>()
+            self.<span class="fn">_check_resources</span>()
+            self.<span class="fn">_check_job_timeout</span>()
+            self.<span class="fn">_check_restart_flag</span>()
+            self.<span class="fn">_log_metrics</span>()
+            <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            logging.error(<span class="st">f"Watchdog error: {e}"</span>)
+            time.<span class="fn">sleep</span>(self.CHECK_INTERVAL)
+
+            <span class="kw">def</span> <span class="fn">_check_ue5_alive</span>(self):
+            procs = [p <span class="kw">for</span> p <span class="kw">in</span> psutil.<span
+              class="fn">process_iter</span>()
+            <span class="kw">if</span> self.UE_PROCESS_NAME <span class="kw">in</span> p.name()]
+            <span class="kw">if not</span> procs:
+            logging.warning(<span class="st">"UE5 not running — restarting..."</span>)
+            self.<span class="fn">_restart_ue5</span>()
+
+            <span class="kw">def</span> <span class="fn">_check_resources</span>(self):
+            <span class="cm"># GPU via nvidia-smi</span>
+            result = subprocess.<span class="fn">run</span>([
+            <span class="st">"nvidia-smi"</span>,
+            <span class="st">"--query-gpu=temperature.gpu,memory.used,memory.total"</span>,
+            <span class="st">"--format=csv,noheader,nounits"</span>
+            ], capture_output=<span class="kw">True</span>, text=<span class="kw">True</span>)
+
+            <span class="kw">if</span> result.returncode == <span class="num">0</span>:
+            parts = result.stdout.strip().<span class="fn">split</span>(<span class="st">","</span>)
+            temp, vram_used, vram_total = <span class="fn">float</span>(parts[<span class="num">0</span>]), <span
+              class="fn">float</span>(parts[<span class="num">1</span>]), <span class="fn">float</span>(parts[<span
+              class="num">2</span>])
+            vram_gb = vram_used / <span class="num">1024</span>
+
+            <span class="kw">if</span> temp > self.MAX_GPU_TEMP:
+            logging.warning(<span class="st">f"GPU temp {temp}°C — pausing solver"</span>)
+            Path(<span class="st">r"D:\pipeline\flags\pause_requested"</span>).<span class="fn">touch</span>()
+
+            <span class="kw">if</span> vram_gb > self.MAX_VRAM_GB:
+            logging.warning(<span class="st">f"VRAM {vram_gb:.1f}GB — forcing restart"</span>)
+            Path(<span class="st">r"D:\pipeline\flags\restart_requested"</span>).<span class="fn">touch</span>()
+
+            <span class="cm"># Disk space</span>
+            disk = psutil.disk_usage(<span class="st">"D:\\"</span>)
+            free_gb = disk.free / (<span class="num">1024</span>**<span class="num">3</span>)
+            <span class="kw">if</span> free_gb < self.MIN_DISK_GB: logging.error(<span class="st">f"Low disk:
+              {free_gb:.1f}GB — pausing"</span>)
+              <span class="cm"># Alert via webhook (Slack, etc.)</span>
+              self.<span class="fn">_send_alert</span>(<span class="st">f"DISK LOW: {free_gb:.1f}GB remaining"</span>)
+
+              <span class="kw">def</span> <span class="fn">_log_metrics</span>(self):
+              <span class="cm"># Ghi metrics ra file — Grafana hoặc simple dashboard đọc</span>
+              db = sqlite3.<span class="fn">connect</span>(<span class="st">r"D:\pipeline\jobs.db"</span>)
+              stats = db.<span class="fn">execute</span>(<span class="st">"""
+                SELECT status, COUNT(*) as cnt
+                FROM segments GROUP BY status
+                """</span>).<span class="fn">fetchall</span>()
+              db.<span class="fn">close</span>()
+
+              metrics = {<span class="st">"timestamp"</span>: datetime.<span class="fn">now</span>().<span
+                class="fn">isoformat</span>()}
+              metrics.<span class="fn">update</span>(<span class="fn">dict</span>(stats))
+
+              <span class="kw">with</span> <span class="fn">open</span>(<span
+                class="st">r"D:\pipeline\logs\metrics.jsonl"</span>, <span class="st">"a"</span>) <span
+                class="kw">as</span> f:
+              f.<span class="fn">write</span>(json.<span class="fn">dumps</span>(metrics) + <span
+                class="st">"\n"</span>)
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 5.3 -->
+      <div class="phase-header section-anchor" id="p5-throughput">
+        <span class="phase-number">PHASE 5.3</span>
+        <div class="phase-title-block">
+          <h2>Throughput Analysis — RTX 3090, nhiều tháng</h2>
+          <p>Ước tính thực tế và kế hoạch capacity</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="metric-row">
+          <div class="metric-card">
+            <span class="metric-val" style="color:var(--green)">~8–12</span>
+            <span class="metric-label">phút solve / 1 phút video (RTX 3090)</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val" style="color:var(--green)">~5–7</span>
+            <span class="metric-label">video segments / giờ (60s avg)</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val" style="color:var(--amber)">~120–168</span>
+            <span class="metric-label">segments / ngày (24/7)</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-val" style="color:var(--accent)">~3,600–5,000</span>
+            <span class="metric-label">segments / tháng (30 ngày)</span>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Thực tế vs lý thuyết — efficiency factor</div>
+            <div class="callout-text">Uptime thực tế cho long-running operation: ~85–90% (restart, maintenance, GC, disk
+              cleanup). Nhân thêm 15–20% overhead từ preprocessing và UE5 asset management. Effective throughput:
+              <strong>~3,000–4,000 segments/tháng</strong> trên 1 máy RTX 3090.
+            </div>
+          </div>
+        </div>
+
+        <table class="spec-table">
+          <tr>
+            <th>Timeline</th>
+            <th>Segments processed</th>
+            <th>Disk usage (curves NPZ)</th>
+            <th>Milestone</th>
+          </tr>
+          <tr>
+            <td>1 tuần</td>
+            <td>~800–1,000</td>
+            <td>~80 GB</td>
+            <td>Pipeline stability test</td>
+          </tr>
+          <tr>
+            <td>1 tháng</td>
+            <td>~3,000–4,000</td>
+            <td>~300 GB</td>
+            <td>First usable dataset</td>
+          </tr>
+          <tr>
+            <td>3 tháng</td>
+            <td>~10,000–12,000</td>
+            <td>~1 TB</td>
+            <td>Training-scale dataset</td>
+          </tr>
+          <tr>
+            <td>6 tháng</td>
+            <td>~20,000–25,000</td>
+            <td>~2 TB</td>
+            <td>Production-scale corpus</td>
+          </tr>
+          <tr>
+            <td>12 tháng</td>
+            <td>~40,000–50,000</td>
+            <td>~4 TB</td>
+            <td>Large-scale research dataset</td>
+          </tr>
+        </table>
+
+        <div class="callout ok">
+          <div class="callout-icon">✓</div>
+          <div class="callout-body">
+            <div class="callout-title">Scale-up path</div>
+            <div class="callout-text">Khi cần throughput cao hơn: thêm Windows machine với RTX GPU. Mỗi machine chạy độc
+              lập, pull từ chung một SQLite DB (hoặc upgrade lên PostgreSQL khi >2 machines). Throughput scale tuyến
+              tính — 3 machine = 3x, không có shared bottleneck vì solver hoàn toàn local.</div>
+          </div>
+        </div>
+
+        <!-- PHASE 5.2 -->
+        <div class="subsection" id="p5-recovery" style="margin-top:32px;">
+          <div class="subsection-title">Recovery strategies — chạy nhiều tháng không đứt</div>
+
+          <table class="spec-table">
+            <tr>
+              <th>Failure mode</th>
+              <th>Detection</th>
+              <th>Auto-recovery</th>
+              <th>Manual action</th>
+            </tr>
+            <tr>
+              <td>UE5 crash</td>
+              <td>Process monitor</td>
+              <td>Watchdog restart &lt;30s</td>
+              <td>Check crash log nếu crash lặp lại</td>
+            </tr>
+            <tr>
+              <td>Memory leak</td>
+              <td>RAM > 100 GB</td>
+              <td>Controlled restart sau N jobs</td>
+              <td>Tune GC_EVERY và RESTART_EVERY</td>
+            </tr>
+            <tr>
+              <td>Solver hung</td>
+              <td>Job timeout 15 phút</td>
+              <td>Kill + requeue + mark suspect</td>
+              <td>Inspect video — corrupt file?</td>
+            </tr>
+            <tr>
+              <td>Disk full</td>
+              <td>Free space &lt;100GB</td>
+              <td>Pause solver, alert</td>
+              <td>Archive old raw videos sang HDD</td>
+            </tr>
+            <tr>
+              <td>GPU overheat</td>
+              <td>Temp > 85°C</td>
+              <td>Pause solver 30 phút</td>
+              <td>Kiểm tra thermal paste, fan</td>
+            </tr>
+            <tr>
+              <td>Network drop</td>
+              <td>Download timeout</td>
+              <td>Retry với backoff</td>
+              <td>Proxy rotation nếu bị ban</td>
+            </tr>
+            <tr>
+              <td>UE5 asset corruption</td>
+              <td>Load failure</td>
+              <td>Requeue video</td>
+              <td>Clear UE5 project cache thủ công</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="doc-footer">
+        <div class="doc-footer-left">
+          MetaHuman Batch Pipeline — Technical Specification v1.0<br>
+          Target: UE 5.7 · RTX 3090 · Windows 11 · Continuous Operation
+        </div>
+        <div class="doc-footer-right">
+          Professional Studio Production Document
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+
+  <script>
+    // Active nav link on scroll
+    const navItems = document.querySelectorAll('.nav-item');
+    const sections = document.querySelectorAll('.section-anchor');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          navItems.forEach(item => {
+            item.classList.toggle('active', item.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, { threshold: 0.3, rootMargin: '-10% 0px -60% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</body>
+
+</html>
